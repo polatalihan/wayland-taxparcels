@@ -58,3 +58,7 @@ Assessed value is an assessor value, not a market-price estimate. Last-sale valu
 
 - MassGIS Property Tax Parcels: https://www.mass.gov/info-details/massgis-data-property-tax-parcels
 - Massachusetts DOR Property Coding and Sales Reporting: https://www.mass.gov/info-details/property-coding-and-sales-reporting
+
+- Quick views include Single Family and All Multi-Family (condominiums, 2/3-family, apartments, and group quarters).
+
+The assessed-value-by-land-use summary uses a compact two-column display with values, shares, and proportional micro-bars for sidebar readability.

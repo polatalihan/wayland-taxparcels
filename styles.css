@@ -45,7 +45,19 @@ h1{font-size:23px;line-height:1.08;margin:0 0 5px;font-weight:760;letter-spacing
 .stat-value{font-size:17px;font-weight:760;letter-spacing:-.02em}
 .stat-label{font-size:10px;color:var(--muted);margin-top:2px}
 .chart-wrap{margin-top:14px;background:#0f1317;border:1px solid #222c35;border-radius:8px;padding:10px 8px 7px}
-.chart-title{font-size:10px;color:var(--muted);margin:0 3px 5px}
+.chart-heading-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 3px 8px}
+.chart-title{font-size:10px;color:var(--muted)}
+.chart-note{font-size:8px;color:#65727e;white-space:nowrap}
+.landuse-value-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.landuse-value-item{min-width:0;background:#14191e;border:1px solid #222c35;border-radius:6px;padding:7px}
+.landuse-value-head{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;min-width:0}
+.landuse-value-label{display:flex;align-items:flex-start;gap:5px;min-width:0;font-size:9px;line-height:1.18;color:#cbd4dc;font-weight:650}
+.landuse-value-label .swatch{margin-top:1px;width:8px;height:8px;flex:0 0 8px}
+.landuse-value-share{font-size:8px;color:#74828f;white-space:nowrap;font-variant-numeric:tabular-nums}
+.landuse-value-amount{font-size:13px;font-weight:760;letter-spacing:-.02em;margin:4px 0 5px;color:#f0f4f7}
+.landuse-value-track{height:3px;border-radius:999px;background:#242b31;overflow:hidden}
+.landuse-value-track span{display:block;height:100%;border-radius:999px}
+.landuse-value-empty{grid-column:1/-1;padding:10px;color:var(--muted);font-size:10px;text-align:center}
 .parcel-panel{min-height:130px}
 .empty-state{font-size:12px;line-height:1.45;color:var(--muted);padding:4px 0 8px}
 .parcel-title{font-size:17px;font-weight:750;line-height:1.2;margin:2px 0}
@@ -91,3 +103,5 @@ footer{padding-top:14px;border-top:1px solid var(--line);color:#687580;font-size
   #mapWrap{height:62vh;min-height:480px}
   .legend{bottom:12px;right:10px}
 }
+
+@media(max-width:430px){.landuse-value-grid{grid-template-columns:1fr}}

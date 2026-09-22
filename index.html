@@ -54,6 +54,8 @@
         </div>
         <div class="quick-grid">
           <button class="chip active" data-quick="all">All</button>
+          <button class="chip" data-quick="singlefamily">Single Family</button>
+          <button class="chip" data-quick="multifamily">All Multi-Family</button>
           <button class="chip" data-quick="economic">Commercial + Industrial</button>
           <button class="chip" data-quick="vacant">Vacant land</button>
           <button class="chip" data-quick="public">Public / Exempt</button>
@@ -122,8 +124,11 @@
           <div class="stat"><div class="stat-value" id="statEconomic">—</div><div class="stat-label">Commercial + industrial</div></div>
         </div>
         <div class="chart-wrap">
-          <div class="chart-title">Assessed value by land use</div>
-          <canvas id="landUseChart" height="210"></canvas>
+          <div class="chart-heading-row">
+            <div class="chart-title">Assessed value by land use</div>
+            <div class="chart-note">share of filtered value</div>
+          </div>
+          <div id="landUseValueGrid" class="landuse-value-grid" aria-label="Assessed value by land use"></div>
         </div>
       </section>
 
@@ -182,7 +187,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="data/wayland_parcels.js"></script>
 <script src="app.js"></script>
 </body>

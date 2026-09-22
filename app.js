@@ -30,7 +30,8 @@ const els = {
   parcelEmpty: document.getElementById("parcelEmpty"),
   closeParcel: document.getElementById("closeParcel"),
   downloadCsv: document.getElementById("downloadCsv"),
-  landUseToggle: document.getElementById("landUseToggle")
+  landUseToggle: document.getElementById("landUseToggle"),
+  landUseValueGrid: document.getElementById("landUseValueGrid")
 };
 
 const LANDUSE_COLORS = {
@@ -89,6 +90,39 @@ function fmtDate(v){
 }
 function shortMoney(v){ return compactMoney.format(num(v)); }
 function isEconomic(p){ return /^Commercial/.test(p.LAND_USE || "") || (p.LAND_USE || "")==="Industrial / Utility"; }
+function isMultiFamilyCategory(c){
+  return [
+    "Residential - Condominium",
+    "Residential - 2/3 Family & Other",
+    "Residential - Apartments",
+    "Residential - Group Quarters"
+  ].includes(c);
+}
+function shortLandUseLabel(c){
+  const labels={
+    "Residential - Single Family":"Single Family",
+    "Residential - Condominium":"Condominium",
+    "Residential - 2/3 Family & Other":"2/3 Family + Other",
+    "Residential - Accessory":"Residential Accessory",
+    "Residential - Apartments":"Apartments",
+    "Residential - Group Quarters":"Group Quarters",
+    "Residential - Vacant Land":"Residential Vacant",
+    "Residential - Other":"Residential Other",
+    "Commercial - Retail/Auto":"Retail / Auto",
+    "Commercial - Office":"Office",
+    "Commercial - Other":"Commercial Other",
+    "Commercial - Vacant Land":"Commercial Vacant",
+    "Industrial / Utility":"Industrial / Utility",
+    "Tax Exempt / Public / Institutional":"Public / Institutional",
+    "Chapter 61 - Forest":"Chapter 61 Forest",
+    "Chapter 61A - Agricultural":"Agricultural",
+    "Chapter 61B - Recreational":"Recreational",
+    "Open Space":"Open Space",
+    "No assessor data":"No Assessor Data",
+    "Other / Unknown":"Other / Unknown"
+  };
+  return labels[c] || c.replace("Residential - ","").replace("Commercial - ","");
+}
 
 const features = DATA.features;
 const categories = [...new Set(features.map(f => f.properties.LAND_USE || "No assessor data"))]
@@ -105,7 +139,6 @@ let selectedCategories = new Set(categories);
 let filteredFeatures = features.slice();
 let parcelLayer = null;
 let selectedLayer = null;
-let landUseChart = null;
 let imageryOn = false;
 
 const map = L.map("map",{
@@ -291,24 +324,20 @@ function updateSummary(){
   els.statLand.textContent=shortMoney(land);
   els.statEconomic.textContent=shortMoney(econ);
 
-  const rows=[...byUse.entries()].filter(d=>d[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const labels=rows.map(d=>d[0].replace("Residential - ","Res. ").replace("Commercial - ","Comm. "));
-  const data=rows.map(d=>d[1]);
-  const colors=rows.map(d=>LANDUSE_COLORS[d[0]]||"#69727b");
-  if(landUseChart) landUseChart.destroy();
-  const ctx=document.getElementById("landUseChart");
-  landUseChart=new Chart(ctx,{
-    type:"bar",
-    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,borderRadius:2}]},
-    options:{
-      indexAxis:"y",responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtMoney(c.raw)}}},
-      scales:{
-        x:{ticks:{color:"#778593",font:{size:9},callback:v=>shortMoney(v)},grid:{color:"rgba(255,255,255,.05)"},border:{display:false}},
-        y:{ticks:{color:"#aeb9c2",font:{size:9}},grid:{display:false},border:{display:false}}
-      }
-    }
-  });
+  const rows=[...byUse.entries()].filter(d=>d[1]>0).sort((a,b)=>b[1]-a[1]);
+  const maxValue=rows.length ? rows[0][1] : 0;
+  els.landUseValueGrid.innerHTML=rows.length ? rows.map(([category,value])=>{
+    const share=total>0 ? value/total*100 : 0;
+    const width=maxValue>0 ? Math.max(2,value/maxValue*100) : 0;
+    return `<div class="landuse-value-item" title="${esc(category)}: ${esc(fmtMoney(value))} (${share.toFixed(1)}%)">
+      <div class="landuse-value-head">
+        <span class="landuse-value-label"><span class="swatch" style="background:${LANDUSE_COLORS[category]||"#69727b"}"></span>${esc(shortLandUseLabel(category))}</span>
+        <span class="landuse-value-share">${share.toFixed(1)}%</span>
+      </div>
+      <div class="landuse-value-amount">${shortMoney(value)}</div>
+      <div class="landuse-value-track"><span style="width:${width}%;background:${LANDUSE_COLORS[category]||"#69727b"}"></span></div>
+    </div>`;
+  }).join("") : `<div class="landuse-value-empty">No assessed value in the current filter.</div>`;
 }
 
 function selectFeature(feature){
@@ -409,6 +438,8 @@ function setQuickActive(name){
 }
 function applyQuick(name){
   if(name==="all") selectedCategories=new Set(categories);
+  if(name==="singlefamily") selectedCategories=new Set(categories.filter(c=>c==="Residential - Single Family"));
+  if(name==="multifamily") selectedCategories=new Set(categories.filter(isMultiFamilyCategory));
   if(name==="economic") selectedCategories=new Set(categories.filter(c=>c.startsWith("Commercial")||c==="Industrial / Utility"));
   if(name==="vacant") selectedCategories=new Set(categories.filter(c=>c.includes("Vacant Land")));
   if(name==="public") selectedCategories=new Set(categories.filter(c=>c==="Tax Exempt / Public / Institutional"));
@@ -416,7 +447,7 @@ function applyQuick(name){
   syncLandUseCheckboxes();
   setQuickActive(name);
   applyFilters();
-  if(name==="economic" || name==="vacant" || name==="public"){ els.theme.value="landuse"; updateLayerStyle(); }
+  if(name!=="all"){ els.theme.value="landuse"; updateLayerStyle(); }
 }
 function resetAll(){
   selectedCategories=new Set(categories);
