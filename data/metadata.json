@@ -1,0 +1,9 @@
+{
+  "title": "Wayland Parcel & Assessed Value Explorer",
+  "fiscal_year": 2024,
+  "feature_count": 5152,
+  "assessor_records": 5047,
+  "unmatched_or_no_assessor_data": 105,
+  "source_note": "MassGIS parcel geometry joined to assessor extract supplied by user; assessed values are FY2024 in this file.",
+  "lot_units": "A (acres) for populated assessor records in this dataset."
+}

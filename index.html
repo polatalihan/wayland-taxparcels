@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive Wayland, Massachusetts parcel, assessed value, land use, and zoning explorer." />
+  <title>Wayland Parcel & Assessed Value Explorer</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sidebar-inner">
+      <header class="app-header">
+        <div>
+          <div class="eyebrow">WAYLAND · ECONOMIC DEVELOPMENT STUDY</div>
+          <h1>Parcel & Assessed Value Explorer</h1>
+          <div class="subtitle">FY2024 assessor data · parcels, land use & zoning</div>
+        </div>
+        <button class="icon-btn" id="aboutBtn" title="About this explorer" aria-label="About">i</button>
+      </header>
+
+      <section class="panel search-panel">
+        <label class="section-label" for="searchInput">Find a parcel</label>
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="Address, owner, or parcel ID" autocomplete="off">
+          <button id="searchClear" class="small-btn" title="Clear search">×</button>
+        </div>
+        <div id="searchResults" class="search-results hidden"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="section-label">Map theme</span>
+          <button id="resetBtn" class="text-btn">Reset</button>
+        </div>
+        <select id="themeSelect" class="full-select">
+          <option value="total">Total assessed value</option>
+          <option value="land">Land assessed value</option>
+          <option value="building">Building assessed value</option>
+          <option value="value_per_acre">Total value per acre</option>
+          <option value="landuse">Land use</option>
+          <option value="zoning">Zoning</option>
+        </select>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="section-label">Quick views</span>
+          <span id="filteredLabel" class="muted">All parcels</span>
+        </div>
+        <div class="quick-grid">
+          <button class="chip active" data-quick="all">All</button>
+          <button class="chip" data-quick="economic">Commercial + Industrial</button>
+          <button class="chip" data-quick="vacant">Vacant land</button>
+          <button class="chip" data-quick="public">Public / Exempt</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="section-label">Land use</span>
+          <button id="landUseToggle" class="text-btn">Collapse</button>
+        </div>
+        <div id="landUseFilters" class="checkbox-list"></div>
+        <label class="mini-label" for="useCodeSelect">Detailed property type code</label>
+        <select id="useCodeSelect" class="full-select">
+          <option value="">All detailed codes</option>
+        </select>
+      </section>
+
+      <section class="panel filter-grid">
+        <div>
+          <label class="mini-label" for="zoningSelect">Zoning</label>
+          <select id="zoningSelect" class="full-select"><option value="">All zoning districts</option></select>
+        </div>
+        <div>
+          <label class="mini-label" for="valueRange">Total assessed value</label>
+          <select id="valueRange" class="full-select">
+            <option value="">All values</option>
+            <option value="0-500000">Under $500K</option>
+            <option value="500000-1000000">$500K–$1M</option>
+            <option value="1000000-2000000">$1M–$2M</option>
+            <option value="2000000-5000000">$2M–$5M</option>
+            <option value="5000000-inf">$5M+</option>
+          </select>
+        </div>
+        <div>
+          <label class="mini-label" for="ownerLocation">Owner location</label>
+          <select id="ownerLocation" class="full-select">
+            <option value="">All</option>
+            <option value="Wayland">Wayland owner address</option>
+            <option value="Non-Wayland">Non-Wayland owner address</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+        </div>
+        <div>
+          <label class="mini-label" for="minLotSize">Minimum lot size</label>
+          <select id="minLotSize" class="full-select">
+            <option value="0">Any size</option>
+            <option value="0.5">0.5+ acres</option>
+            <option value="1">1+ acres</option>
+            <option value="2">2+ acres</option>
+            <option value="5">5+ acres</option>
+            <option value="10">10+ acres</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel summary-panel">
+        <div class="section-heading">
+          <span class="section-label">Filtered summary</span>
+          <button id="downloadCsv" class="text-btn">Download CSV</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-value" id="statParcels">—</div><div class="stat-label">Parcels</div></div>
+          <div class="stat"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total assessed</div></div>
+          <div class="stat"><div class="stat-value" id="statLand">—</div><div class="stat-label">Land value</div></div>
+          <div class="stat"><div class="stat-value" id="statEconomic">—</div><div class="stat-label">Commercial + industrial</div></div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">Assessed value by land use</div>
+          <canvas id="landUseChart" height="210"></canvas>
+        </div>
+      </section>
+
+      <section id="parcelPanel" class="panel parcel-panel">
+        <div class="section-heading">
+          <span class="section-label">Selected parcel</span>
+          <button id="closeParcel" class="text-btn hidden">Clear</button>
+        </div>
+        <div id="parcelEmpty" class="empty-state">Click a parcel or search for an address to see assessment, land-use, zoning, and property details.</div>
+        <div id="parcelDetails" class="hidden"></div>
+      </section>
+
+      <footer>
+        <div>Built for static hosting on GitHub Pages.</div>
+        <div class="footer-links">
+          <a href="https://www.mass.gov/info-details/massgis-data-property-tax-parcels" target="_blank" rel="noopener">MassGIS parcel documentation</a>
+          <span>·</span>
+          <a href="https://www.mass.gov/info-details/property-coding-and-sales-reporting" target="_blank" rel="noopener">MA DOR property codes</a>
+        </div>
+      </footer>
+    </div>
+  </aside>
+
+  <main id="mapWrap">
+    <div id="map"></div>
+    <div id="legend" class="map-card legend"></div>
+    <div class="map-controls">
+      <button id="fitBtn" class="map-button" title="Zoom to Wayland">⌂</button>
+      <button id="basemapBtn" class="map-button wide" title="Switch basemap">Imagery</button>
+    </div>
+    <div id="loading" class="loading">Loading Wayland parcels…</div>
+  </main>
+</div>
+
+<div id="aboutModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="modal-card">
+    <button id="aboutClose" class="modal-close" aria-label="Close">×</button>
+    <div class="eyebrow">ABOUT THE EXPLORER</div>
+    <h2 id="aboutTitle">Wayland Parcel & Assessed Value Explorer</h2>
+    <p>This dashboard is designed for an economic-development scan of Wayland. It combines parcel geometry with the assessor extract in the supplied dataset and makes assessed value, land use, and zoning directly queryable.</p>
+    <div class="note-grid">
+      <div><strong>Assessment year</strong><span>FY2024</span></div>
+      <div><strong>Parcel polygons</strong><span id="aboutCount">—</span></div>
+      <div><strong>Primary land-use field</strong><span>USE_CODE (MA DOR)</span></div>
+      <div><strong>Lot-size units</strong><span>Acres in populated records</span></div>
+    </div>
+    <h3>Interpretation notes</h3>
+    <ul>
+      <li><strong>Total assessed value</strong> is the assessor's value for land and structures; it is not a market-price estimate.</li>
+      <li><strong>Land use</strong> uses the Massachusetts DOR property type code. Four-character local variants are grouped using the first three digits of the DOR code, while the original local code remains visible.</li>
+      <li><strong>Last sale price</strong> is shown for reference only. Assessor files can contain nominal or non-arm's-length sales, including $1 transactions.</li>
+      <li><strong>Building area</strong> definitions can vary across CAMA systems and property types, so comparisons should be treated as screening-level analysis.</li>
+      <li>Some parcel polygons do not have a populated assessor match in the supplied extract; these remain on the map as “No assessor data.”</li>
+    </ul>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="data/wayland_parcels.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
