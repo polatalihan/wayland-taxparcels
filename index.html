@@ -126,9 +126,9 @@
         <div class="chart-wrap">
           <div class="chart-heading-row">
             <div class="chart-title">Assessed value by land use</div>
-            <div class="chart-note">share of filtered value</div>
+            <div class="chart-note">share of filtered total</div>
           </div>
-          <div id="landUseValueGrid" class="landuse-value-grid" aria-label="Assessed value by land use"></div>
+          <div id="landUseValueGrid" class="landuse-value-grid"></div>
         </div>
       </section>
 
@@ -157,7 +157,14 @@
     <div id="legend" class="map-card legend"></div>
     <div class="map-controls">
       <button id="fitBtn" class="map-button" title="Zoom to Wayland">⌂</button>
-      <button id="basemapBtn" class="map-button wide" title="Switch basemap">Imagery</button>
+      <label class="basemap-picker" title="Choose basemap">
+        <span>Basemap</span>
+        <select id="basemapSelect" aria-label="Basemap">
+          <option value="light" selected>Light</option>
+          <option value="dark">Dark</option>
+          <option value="aerial">Aerial</option>
+        </select>
+      </label>
     </div>
     <div id="loading" class="loading">Loading Wayland parcels…</div>
   </main>

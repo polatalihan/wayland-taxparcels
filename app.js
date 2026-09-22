@@ -35,26 +35,29 @@ const els = {
 };
 
 const LANDUSE_COLORS = {
-  "Residential - Single Family":"#788795",
-  "Residential - Condominium":"#8b9eae",
-  "Residential - 2/3 Family & Other":"#a37b65",
-  "Residential - Accessory":"#9d8d72",
-  "Residential - Apartments":"#e19a53",
-  "Residential - Group Quarters":"#d7b56b",
-  "Residential - Vacant Land":"#d9c36b",
-  "Residential - Other":"#aa8b74",
-  "Open Space":"#6d996f",
-  "Commercial - Retail/Auto":"#d96875",
-  "Commercial - Office":"#a777cf",
-  "Commercial - Other":"#c87b57",
-  "Commercial - Vacant Land":"#bf9c4d",
-  "Industrial / Utility":"#d45b4f",
-  "Chapter 61 - Forest":"#3f7950",
-  "Chapter 61A - Agricultural":"#66a65f",
-  "Chapter 61B - Recreational":"#4aa49a",
-  "Tax Exempt / Public / Institutional":"#5684b9",
-  "Other / Unknown":"#7b6c89",
-  "No assessor data":"#464d53"
+  // Residential: conventional yellow → orange → brown progression
+  "Residential - Single Family":"#F6D55C",
+  "Residential - Condominium":"#F4A261",
+  "Residential - 2/3 Family & Other":"#E98B39",
+  "Residential - Accessory":"#E7B66A",
+  "Residential - Apartments":"#C96A2B",
+  "Residential - Group Quarters":"#8F4B23",
+  "Residential - Vacant Land":"#F9E8A6",
+  "Residential - Other":"#B9793F",
+
+  // General planning land-use colors
+  "Commercial - Retail/Auto":"#D73027",
+  "Commercial - Office":"#EF6548",
+  "Commercial - Other":"#B2182B",
+  "Commercial - Vacant Land":"#F4A6A0",
+  "Industrial / Utility":"#7B3294",
+  "Tax Exempt / Public / Institutional":"#2C7FB8",
+  "Open Space":"#41AB5D",
+  "Chapter 61 - Forest":"#238B45",
+  "Chapter 61A - Agricultural":"#78C679",
+  "Chapter 61B - Recreational":"#31A354",
+  "Other / Unknown":"#9E9E9E",
+  "No assessor data":"#C7C7C7"
 };
 
 const VALUE_COLORS = ["#263849","#34536c","#437092","#5f8eb1","#86abc5","#c4d7e5","#f0d7a4"];
@@ -139,7 +142,7 @@ let selectedCategories = new Set(categories);
 let filteredFeatures = features.slice();
 let parcelLayer = null;
 let selectedLayer = null;
-let imageryOn = false;
+let activeBasemap = "light";
 
 const map = L.map("map",{
   center:[42.36,-71.36],
@@ -150,18 +153,44 @@ const map = L.map("map",{
 });
 map.zoomControl.setPosition("topright");
 
+const lightBase = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  {attribution:"Tiles © Esri",maxZoom:20}
+);
+const lightRef = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+  {attribution:"Esri",maxZoom:20,pane:"overlayPane"}
+);
 const darkBase = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
   {attribution:"Tiles © Esri",maxZoom:20}
-).addTo(map);
+);
 const darkRef = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
   {attribution:"Esri",maxZoom:20,pane:"overlayPane"}
-).addTo(map);
+);
 const imagery = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   {attribution:"Tiles © Esri",maxZoom:20}
 );
+const imageryRef = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+  {attribution:"Esri",maxZoom:20,pane:"overlayPane"}
+);
+
+function setBasemap(name){
+  [lightBase,lightRef,darkBase,darkRef,imagery,imageryRef].forEach(layer=>{
+    if(map.hasLayer(layer)) map.removeLayer(layer);
+  });
+  activeBasemap=name;
+  if(name==="dark"){ darkBase.addTo(map); darkRef.addTo(map); }
+  else if(name==="aerial"){ imagery.addTo(map); imageryRef.addTo(map); }
+  else { lightBase.addTo(map); lightRef.addTo(map); }
+  if(parcelLayer) parcelLayer.bringToFront();
+  if(selectedLayer) selectedLayer.bringToFront();
+  updateLayerStyle();
+}
+setBasemap("light");
 
 function zoningColor(z){
   if(!z) return "#4c5359";
@@ -188,7 +217,9 @@ function featureStyle(feature){
   if(theme==="landuse") fill=LANDUSE_COLORS[p.LAND_USE] || "#69727b";
   else if(theme==="zoning") fill=zoningColor(p.ZONING);
   else fill=valueColor(theme,valueThemeInfo(theme,p));
-  return {color:"#11171c",weight:.55,opacity:.9,fillColor:fill,fillOpacity};
+  const outline = activeBasemap==="dark" ? "#f2f2f2" : "#2a2a2a";
+  fillOpacity = activeBasemap==="aerial" ? .66 : .78;
+  return {color:outline,weight:.55,opacity:.72,fillColor:fill,fillOpacity};
 }
 function tooltipHtml(p){
   return `<strong>${esc(safe(p.SITE_ADDR,"Parcel"))}</strong><br>`+
@@ -204,7 +235,7 @@ function renderLayer(){
     onEachFeature:(feature,layer)=>{
       layer.bindTooltip(tooltipHtml(feature.properties||{}),{sticky:true,className:"parcel-tip",direction:"top"});
       layer.on("click",()=>selectFeature(feature));
-      layer.on("mouseover",e=>e.target.setStyle({weight:1.5,color:"#f3f6f8"}));
+      layer.on("mouseover",e=>e.target.setStyle({weight:1.6,color:activeBasemap==="dark"?"#ffffff":"#111111"}));
       layer.on("mouseout",e=>parcelLayer && parcelLayer.resetStyle(e.target));
     }
   }).addTo(map);
@@ -492,16 +523,7 @@ els.closeParcel.addEventListener("click",clearSelection);
 els.downloadCsv.addEventListener("click",downloadCSV);
 document.querySelectorAll(".chip[data-quick]").forEach(b=>b.addEventListener("click",()=>applyQuick(b.dataset.quick)));
 document.getElementById("fitBtn").addEventListener("click",fitAll);
-document.getElementById("basemapBtn").addEventListener("click",()=>{
-  imageryOn=!imageryOn;
-  if(imageryOn){
-    map.removeLayer(darkBase);map.removeLayer(darkRef);imagery.addTo(map);
-    document.getElementById("basemapBtn").textContent="Dark map";
-  } else {
-    map.removeLayer(imagery);darkBase.addTo(map);darkRef.addTo(map);
-    document.getElementById("basemapBtn").textContent="Imagery";
-  }
-});
+document.getElementById("basemapSelect").addEventListener("change",e=>setBasemap(e.target.value));
 els.landUseToggle.addEventListener("click",()=>{
   const hidden=els.landUseFilters.classList.toggle("hidden");
   els.landUseToggle.textContent=hidden?"Expand":"Collapse";
