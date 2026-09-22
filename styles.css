@@ -75,7 +75,7 @@ footer{padding-top:14px;border-top:1px solid var(--line);color:#687580;font-size
 #mapWrap{position:relative;flex:1;min-width:0;height:100%}
 #map{height:100%;width:100%;background:#e8e8e8}
 .map-card{position:absolute;z-index:600;background:rgba(14,17,21,.93);border:1px solid #34414d;border-radius:8px;box-shadow:var(--shadow);backdrop-filter:blur(5px)}
-.legend{bottom:20px;right:18px;padding:10px 11px;min-width:180px;max-width:245px}
+.legend{bottom:20px;right:18px;padding:10px 11px;min-width:180px;max-width:260px;max-height:calc(100vh - 110px);overflow-y:auto}
 .legend-title{font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:750;margin-bottom:7px}
 .legend-row{display:flex;align-items:center;gap:7px;font-size:10px;color:#ccd4db;margin:4px 0}
 .legend-color{width:18px;height:9px;border-radius:2px;border:1px solid rgba(255,255,255,.18)}

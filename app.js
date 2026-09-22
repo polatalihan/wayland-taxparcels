@@ -252,10 +252,9 @@ function renderLegend(){
   let html=`<div class="legend-title">${esc(THEME_LABELS[theme])}</div>`;
   if(theme==="landuse"){
     const visibleCats=categories.filter(c=>selectedCategories.has(c));
-    visibleCats.slice(0,12).forEach(c=>{
+    visibleCats.forEach(c=>{
       html+=`<div class="legend-row"><span class="legend-color" style="background:${LANDUSE_COLORS[c]||"#69727b"}"></span><span>${esc(c.replace("Residential - ","Res. ").replace("Commercial - ","Comm. "))}</span></div>`;
     });
-    if(visibleCats.length>12) html+=`<div class="legend-row">+ ${visibleCats.length-12} more</div>`;
   } else if(theme==="zoning"){
     const visibleZ=[...new Set(filteredFeatures.map(f=>f.properties.ZONING).filter(Boolean))].sort();
     visibleZ.slice(0,16).forEach(z=>{
@@ -483,7 +482,7 @@ function applyQuick(name){
 function resetAll(){
   selectedCategories=new Set(categories);
   syncLandUseCheckboxes();
-  els.useCode.value="";els.zoning.value="";els.valueRange.value="";els.ownerLocation.value="";els.minLotSize.value="0";els.theme.value="total";
+  els.useCode.value="";els.zoning.value="";els.valueRange.value="";els.ownerLocation.value="";els.minLotSize.value="0";els.theme.value="landuse";
   els.search.value="";els.searchResults.classList.add("hidden");
   setQuickActive("all");
   clearSelection();

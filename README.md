@@ -1,4 +1,4 @@
-# Wayland Parcel & Assessed Value Explorer — v3
+# Wayland Parcel & Assessed Value Explorer — v4
 
 Static GitHub Pages dashboard for Wayland, Massachusetts assessor parcels.
 
@@ -18,3 +18,12 @@ Static GitHub Pages dashboard for Wayland, Massachusetts assessor parcels.
 
 ## Publish on GitHub Pages
 Upload the contents of this folder to the repository root, then enable GitHub Pages from the main branch / root.
+
+
+## v4 change
+- Land use is now the default map theme and Reset returns to Land use.
+- Asset URLs include a version query string to reduce stale browser/GitHub Pages caching after updates.
+
+## v5 changes
+
+- Land-use legend now shows every active land-use category; no categories are collapsed behind a “+ more” label.
